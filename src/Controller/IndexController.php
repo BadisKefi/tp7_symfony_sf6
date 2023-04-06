@@ -6,6 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Article;
+use App\Form\ArticleType;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -40,32 +41,24 @@ class IndexController extends AbstractController
         $entityManager->flush();
         return new Response('Saved an article with the id of ' . $article->getId());
     }
+
     /**
-     * @Route("/article/new", name="new_article")
-     * Method({"GET", "POST"})
-     */
-    public function new(Request $request,ManagerRegistry $doctirine)
-    {
-        $entityManager = $doctirine->getManager();
-        $article = new Article();
-        $form = $this->createFormBuilder($article)
-            ->add('nom', TextType::class)
-            ->add('prix', TextType::class)
-            ->add('save',SubmitType::class,array('label' => 'Créer'))->getForm();
-
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $article = $form->getData();
-
-            $entityManager = $doctirine->getManager();
-            $entityManager->persist($article);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('article_list');
-        }
-        return $this->render('articles/new.html.twig', ['form' => $form->createView()]);
+ * @Route("/article/new", name="new_article")
+ * Method({"GET", "POST"})
+ */
+ public function new(Request $request, ManagerRegistry $doctirine) {
+    $entityManager = $doctirine->getManager();
+    $article = new Article();
+    $form = $this->createForm(ArticleType::class,$article);
+    $form->handleRequest($request);
+    if($form->isSubmitted() && $form->isValid()) {
+    $article = $form->getData();
+    $entityManager = $doctirine->getManager();
+    $entityManager->persist($article);
+    $entityManager->flush();
+    return $this->redirectToRoute('article_list');
+    }
+    return $this->render('articles/new.html.twig',['form' => $form->createView()]);
     }
     /**
  * @Route("/article/{id}", name="article_show")
@@ -85,24 +78,22 @@ class IndexController extends AbstractController
         $entityManager = $doctirine->getManager();
         $article = new Article();
         $article = $doctirine->getRepository(Article::class)->find($id);
-    
-        $form = $this->createFormBuilder($article)
-        ->add('nom', TextType::class)
-        ->add('prix', TextType::class)
-        ->add('save', SubmitType::class, array(
-        'label' => 'Modifier'
-        ))->getForm();
-    
-        $form->handleRequest($request);
-        if($form->isSubmitted() && $form->isValid()) {
-    
-        $entityManager = $doctirine->getManager();
-        $entityManager->flush();
-    
-        return $this->redirectToRoute('article_list');
-        }
-        return $this->render('articles/edit.html.twig', ['form' => $form->createView()]);
- }
+        
+         $form = $this->createForm(ArticleType::class,$article);
+        
+         $form->handleRequest($request);
+         if($form->isSubmitted() && $form->isValid()) {
+        
+         $entityManager = $doctirine->getManager();
+         $entityManager->flush();
+        
+         return $this->redirectToRoute('article_list');
+         }
+        
+         return $this->render('articles/edit.html.twig', ['form' =>
+        $form->createView()]);
+        
+    }
     /**
  * @Route("/article/delete/{id}",name="delete_article")
  * @Method({"DELETE"})
